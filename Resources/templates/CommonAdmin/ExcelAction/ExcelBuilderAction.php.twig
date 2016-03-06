@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Doctrine\Common\Util\Inflector;
 
 /**
  * @author Bob van de Vijver
@@ -25,7 +26,7 @@ class ExcelController extends \{{ namespace_prefix }}\{{ bundle_name }}\Controll
      * Generates the Excel object and send a streamed response
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function excelAction(Request $request)
+    public function excelAction(Request $request, $key = null)
     {
         $this->request = $request;
         {{ block('security_action') }}
@@ -40,12 +41,13 @@ class ExcelController extends \{{ namespace_prefix }}\{{ bundle_name }}\Controll
         $phpExcelObject = $phpexcel->createPHPExcelObject();
         $this->createExcelObject($phpExcelObject);
         $sheet = $phpExcelObject->setActiveSheetIndex(0);
+        $results = $this->getResults();
 
+        if (!method_exists($this,'createExcelHeader' . Inflector::classify($key))) $key = null; // back to defaults
         // Create the first bold row in the Excel spreadsheet
-        $this->createExcelHeader($sheet);
-
+        call_user_func(array($this,'createExcelHeader' . Inflector::classify($key)), $sheet);
         // Print the data
-        $this->createExcelData($sheet);
+        call_user_func(array($this,'createExcelData' . Inflector::classify($key)), $sheet, $results);
 
         // Create the Writer, Response and add header
         $writer = $phpexcel->createWriter($phpExcelObject, '{{ builder.filetype }}');
@@ -79,7 +81,7 @@ class ExcelController extends \{{ namespace_prefix }}\{{ bundle_name }}\Controll
     /**
      * Fill the Excel speadsheet with the headers
      */
-    protected function createExcelheader(\PhpExcel_Worksheet $sheet)
+    protected function createExcelHeader(\PhpExcel_Worksheet $sheet)
     {
         $translator = $this->get('translator');
 
@@ -104,10 +106,9 @@ class ExcelController extends \{{ namespace_prefix }}\{{ bundle_name }}\Controll
     /**
      * Fills the Excel spreadsheet with data
      */
-    protected function createExcelData(\PhpExcel_Worksheet $sheet)
+    protected function createExcelData(\PhpExcel_Worksheet $sheet, $results)
     {
         $row = 2;
-        $results = $this->getResults();
 
         foreach($results as ${{ builder.ModelClass }}) {
             $colNum = 0;
@@ -138,6 +139,72 @@ class ExcelController extends \{{ namespace_prefix }}\{{ bundle_name }}\Controll
         }
     }
     
+{% for keyname, columns in builder.export %}
+
+    /**
+     * Fill the Excel speadsheet with the headers for {{ keyname }}
+     */
+    protected function createExcelHeader{{ keyname|classify|php_name }}(\PhpExcel_Worksheet $sheet)
+    {
+        $translator = $this->get('translator');
+
+        $colNum = 0;
+        {% for column in columns %}
+            {% if column.credentials is not empty and column.credentials is not same as('AdmingenAllowed') %}
+            {% set credentials = column.credentials %}
+            if ($this->validateCredentials('{{ credentials }}')) {
+            {% endif %}
+            $sheet->setCellValueByColumnAndRow($colNum, 1, $translator->trans("{{ column.label }}", array(), '{{ i18n_catalog|default("Admin") }}'), true);
+            $columnLetter = \PHPExcel_Cell::stringFromColumnIndex($colNum);
+            $sheet->getStyle($columnLetter . '1')->getFont()->setBold(true);
+            $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+
+            $colNum++;
+            {% if column.credentials is not empty and column.credentials is not same as('AdmingenAllowed') %}
+            }
+            {% endif %}
+        {% endfor %}
+    }
+
+    /**
+     * Fills the Excel spreadsheet with data for {{ keyname }}
+     */
+    protected function createExcelData{{ keyname|classify|php_name }}(\PhpExcel_Worksheet $sheet, $results)
+    {
+        $row = 2;
+
+        foreach($results as ${{ builder.ModelClass }}) {
+            $colNum = 0;
+            {% for name,column in columns %}
+                {% if column.credentials is not empty and column.credentials is not same as('AdmingenAllowed') %}
+                    {% set credentials = column.credentials %}
+                if ($this->validateCredentials('{{ credentials }}', ${{ builder.ModelClass }})) {
+                {% endif %}
+                $data = $this->getValueForCell('{{ column.getter }}', ${{ builder.ModelClass }});
+                $formatedValue = $this->format{{ name|classify|php_name }}($data);
+
+                // Convert DateTime object to given format
+                if ($formatedValue instanceof \DateTime){
+                    $formatedValue = $formatedValue->format('{{ builder.dateTimeFormat }}');
+                }
+
+                $sheet->setCellValueByColumnAndRow($colNum, $row, $formatedValue);
+                {% if column.credentials is not empty and column.credentials is not same as('AdmingenAllowed') %}
+                }
+                {% endif %}
+            // Inc is outside of the credentials check to be sync with headers.
+            // Otherwise if column X is authorized but depending on object, there will
+            // be some offset. Putting inc outise of the check will always update it.
+            $colNum++;
+            {% endfor %}
+
+            $row++;
+        }
+    }
+
+{% endfor %}
+
+
     /**
      * Gets the value from the given field that will be place at an Excel cell
      *

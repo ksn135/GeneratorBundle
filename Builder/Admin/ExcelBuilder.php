@@ -12,6 +12,11 @@ namespace Admingenerator\GeneratorBundle\Builder\Admin;
 class ExcelBuilder extends ListBuilder
 {
   /**
+   * @var array
+   */
+  protected $export = null;
+
+  /**
    * (non-PHPdoc)
    * @see Admingenerator\GeneratorBundle\Builder.BaseBuilder::getYamlKey()
    */
@@ -40,4 +45,50 @@ class ExcelBuilder extends ListBuilder
     }
     return $dateTimeFormat;
   }
+
+  /**
+   * Return a list of columns from excel.export
+   * 
+   * In YAML config should looks like this:
+   *   excel:
+   *     params: 
+   *       export: 
+   *         full:
+   *           -       id
+   *           -       title
+   *           -       code
+   *           -       guid
+   *           -       note
+   *         short:
+   *           -       id
+   *           -       code
+   *           -       title
+   *         simple:
+   *           -       title
+   * 
+   * @return array
+   */
+  public function getExport()
+  {
+      if (null === $this->export) {
+          $this->export = array();
+          $this->fillExport();
+      }
+
+      return $this->export;
+  }
+
+  protected function fillExport()
+  {
+      $export = $this->getVariable('export',[]);
+      if (!count($export)) return [];
+
+      foreach ($export as $keyName => $columns ) {
+          $this->export[$keyName] = [];
+          foreach ($columns as $columnName) {
+               $this->export[$keyName][$columnName] = $this->createColumn($columnName, false);
+          }
+      }
+  }
+
 }
