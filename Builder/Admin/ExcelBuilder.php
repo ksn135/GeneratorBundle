@@ -86,7 +86,9 @@ class ExcelBuilder extends ListBuilder
       foreach ($export as $keyName => $columns ) {
           $this->export[$keyName] = [];
           foreach ($columns as $columnName) {
-               $this->export[$keyName][$columnName] = $this->createColumn($columnName, false);
+              $column = $this->createColumn($columnName, false);
+              $this->setUserColumnConfiguration($column);              
+              $this->export[$keyName][$columnName] = $column;
           }
       }
   }
