@@ -5,7 +5,7 @@
 {% use '../CommonAdmin/ListTemplate/Column/collection.php.twig' %}
 
 {% block show_column %}
-{{ echo_block('show_column_' ~ column.name) -}}
+{{ echo_block('show_column_' ~ column.name|replace({'.': '_'}) ) -}}
     {%- if column.customView != null and builder.variable('custom_blocks') != null -%}
         {{- echo_use(builder.variable('custom_blocks')) -}}
         {{- echo_set('field_value', builder.ModelClass ~ '.' ~ column.getter, false) -}}

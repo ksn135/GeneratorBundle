@@ -9,7 +9,8 @@ namespace Admingenerated\{{ namespace_prefix }}{{ bundle_name }}\{{ builder.gene
 
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-
+use Doctrine\Common\Util\Inflector;
+use Symfony\Component\HttpFoundation\Request;
 /**
  * @author Bob van de Vijver
  */
@@ -19,7 +20,7 @@ class ExcelController extends ListController
      * Generates the Excel object and send a streamed response
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function excelAction()
+    public function excelAction($key = null)
     {
         {{ block('security_action') }}
         
@@ -33,12 +34,15 @@ class ExcelController extends ListController
         $phpExcelObject = $phpexcel->createPHPExcelObject();
         $this->createExcelObject($phpExcelObject);
         $sheet = $phpExcelObject->setActiveSheetIndex(0);
+        $results = $this->getResults();
 
+        if (!method_exists($this,'createExcelHeader' . Inflector::classify($key))) $key = null; // back to defaults
         // Create the first bold row in the Excel spreadsheet
-        $this->createExcelHeader($sheet);
-
+        call_user_func(array($this,'createExcelHeader' . Inflector::classify($key)), $sheet);
         // Print the data
-        $this->createExcelData($sheet);
+        call_user_func(array($this,'createExcelData' . Inflector::classify($key)), $sheet, $results);
+
+
 
         // Create the Writer, Response and add header
         $writer = $phpexcel->createWriter($phpExcelObject, '{{ builder.filetype }}');
@@ -72,7 +76,7 @@ class ExcelController extends ListController
     /**
      * Fill the Excel speadsheet with the headers
      */
-    protected function createExcelheader(\PhpExcel_Worksheet $sheet)
+    protected function createExcelHeader(\PhpExcel_Worksheet $sheet)
     {
         $translator = $this->get('translator');
         
@@ -90,10 +94,9 @@ class ExcelController extends ListController
     /**
      * Fills the Excel spreadsheet with data
      */
-    protected function createExcelData(\PhpExcel_Worksheet $sheet)
+    protected function createExcelData(\PhpExcel_Worksheet $sheet, $results)
     {
         $row = 2;
-        $results = $this->getResults();
 
         {% set colNum = 0 %}
         foreach($results as $rowData) {
@@ -111,11 +114,13 @@ class ExcelController extends ListController
             $getter = 'get'.ucfirst($getter);
             $value = method_exists($data, $getter) ? $data->$getter() : null;
 
-            $formatedValue = $this->format{{ name|classify }}($value);
+            $formatedValue = $this->format{{ name|classify|replace({'.': '_'}) }}($value);
 
             // Convert DateTime object to given format
             if ($formatedValue instanceof \DateTime){
                 $formatedValue = $formatedValue->format('{{ builder.dateTimeFormat }}');
+            } else {
+                $formatedValue = (string) $formatedValue;
             }
 
             $sheet->setCellValueByColumnAndRow({{ colNum }}, $row, $formatedValue);
@@ -125,6 +130,68 @@ class ExcelController extends ListController
             $row++;
         }
     }
+
+{% for keyname, columns in builder.export %}
+
+    /**
+     * Fill the Excel speadsheet with the headersfor {{ keyname }}
+    */
+    protected function createExcelHeader{{ keyname|classify|php_name }}(\PhpExcel_Worksheet $sheet)
+    {
+        $translator = $this->get('translator');
+        
+        {% set colNum = 0 %}
+        {% for column in columns %}
+        $sheet->setCellValueByColumnAndRow({{ colNum }}, 1, $translator->trans("{{ column.label }}", array(), '{{ i18n_catalog|default("Admin") }}'), true);
+        $columnLetter = \PHPExcel_Cell::stringFromColumnIndex({{ colNum }});
+        $sheet->getStyle($columnLetter . '1')->getFont()->setBold(true);
+        $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+
+        {% set colNum = colNum + 1 %}
+        {% endfor %}
+    }
+
+    /**
+     * Fills the Excel spreadsheet with data
+     */
+    protected function createExcelData{{ keyname|classify|php_name }}(\PhpExcel_Worksheet $sheet, $results)
+    {
+        $row = 2;
+
+        {% set colNum = 0 %}
+        foreach($results as $rowData) {
+            {% for name,column in columns %}
+            // Retrieve relations
+            $getter = '{{ column.getter }}';
+            $data = $rowData;
+
+            while (($pos = strpos($getter, '.')) > 0){
+                $tempGetter = 'get'.ucfirst(substr($getter, 0, $pos));
+                $getter = substr($getter, $pos + 1);
+                $data = method_exists($data, $tempGetter) ? $data->$tempGetter() : null;
+            }
+
+            $getter = 'get'.ucfirst($getter);
+            $value = method_exists($data, $getter) ? $data->$getter() : null;
+
+            $formatedValue = $this->format{{ name|classify|replace({'.': '_'}) }}($value);
+
+            // Convert DateTime object to given format
+            if ($formatedValue instanceof \DateTime){
+                $formatedValue = $formatedValue->format('{{ builder.dateTimeFormat }}');
+            } else {
+                $formatedValue = (string) $formatedValue;
+            }
+
+            $sheet->setCellValueByColumnAndRow({{ colNum }}, $row, $formatedValue);
+            {% set colNum = colNum + 1 %}
+            {% endfor %}
+
+            $row++;
+        }
+    }
+
+ {% endfor %}
 
     {% block getResults -%}
     protected function getResults()
@@ -140,7 +207,7 @@ class ExcelController extends ListController
      * @param mixed The value
      * @return mixed The formated value
      */
-    protected function format{{ name|classify }}($value)
+    protected function format{{ name|classify|replace({'.': '_'}) }}($value)
     {
         return $value;
     }

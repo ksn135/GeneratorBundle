@@ -7,7 +7,9 @@
         {{ echo_if (builder.ModelClass ~ "s|length > 0") }}
 
         {{ echo_for(builder.ModelClass, builder.ModelClass ~ "s" ) }}
-            {{ echo_include(builder.namespacePrefixForTemplate ~ bundle_name ~ ':' ~ builder.BaseGeneratorName ~ 'List:row.html.twig') }}
+            {{ echo_include(builder.namespacePrefixForTemplate ~ bundle_name ~ ':' ~ 
+                builder.BaseGeneratorName ~ 'List:row.html.twig') }}
+
         {{ echo_endfor() }}
 
         {{- block('object_actions_script') -}}

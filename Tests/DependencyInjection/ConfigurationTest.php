@@ -50,8 +50,8 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
                 'number_format' => array(
                         'decimal'            => 0,
                         'decimal_point'      => '.',
-                        'thousand_separator' => ','
-                        )
+                        'thousand_separator' => ',',
+                        ),
             ),
             'templates_dirs' => array(),
             'form_types' => array(
@@ -198,6 +198,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             ),
             'stylesheets'   => array(),
             'javascripts'   => array(),
+            'default_action_after_save' => 'edit',
         );
 
         if (!is_null($key) && array_key_exists($key, $defaultConfiguration)) {

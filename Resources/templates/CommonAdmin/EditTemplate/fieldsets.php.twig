@@ -15,7 +15,7 @@
             {% endif %}
     			
             {% for rowName,row in fieldset %}
-                {% set rowspan = rowName|is_numeric ? 'col-md-4' : rowName %}
+                {% set rowspan = rowName|is_numeric ? 'col-md-8' : rowName %}
                 {% set rowColumns = builder.columnsFor(row) %}
                 {% set rowGroups = rowColumns|mapBy('groups')|flatten %}
 

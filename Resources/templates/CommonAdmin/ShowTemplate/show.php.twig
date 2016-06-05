@@ -19,6 +19,8 @@
             <legend><span>{{ echo_trans(fieldsetName,{}, i18n_catalog is defined ? i18n_catalog : "Admin" ) }}</span></legend>
             {% endif %}
 
+            {{ echo_block('show_fieldset_' ~ fieldsetName|classify|replace({'.': '_'}) ) }}
+
             {% for row in fieldset %}
             {% set rowColumns = builder.columnsFor(row) %}
             {% set rowGroups = rowColumns|mapBy('groups')|flatten %}
@@ -29,20 +31,20 @@
             {% endif %}
 
                 {% for column in rowColumns %}
-                <div class="row print-group">
+                <div class="row print-group show-column-div-{{ column.name|replace({'.': '_'}) }}">
                 {% if column.groups is not empty %}
                 {{ echo_set('columnGroups', echo_twig_arr(column.groups), false) }}
                 {{ echo_if('groups is empty or columnGroups|intersect(groups) is not empty') }}
                 {% endif %}
 
                     <div class="show_column_label col-md-2 text-right">
-                    {{ echo_block('show_column_label_' ~ column.name) -}}
+                    {{ echo_block('show_column_label_' ~ column.name|replace({'.': '_'}) ) -}}
                         <strong>{{ echo_twig("'" ~ column.label|addslashes ~ "'|trans({}, '" ~ i18n_catalog|default("Admin") ~ "')") }}</strong>
                     {{- echo_endblock() }}
                     </div>
 
                     <div class="col-md-10">
-                        <div class="form-group form_field field_{{ column.name }}">
+                        <div class="form-group form_field field_{{ column.name|replace({'.': '_'}) }}">
                             {{ block('show_column') }}
                         </div>
                     </div>
@@ -56,6 +58,9 @@
             {{ echo_endif() }}
             {% endif %}
             {% endfor %}
+
+            {{ echo_endblock() }}
+
         </fieldset>
 
     {% if fieldsetGroups is not empty %}

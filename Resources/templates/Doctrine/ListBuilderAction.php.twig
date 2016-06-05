@@ -1,5 +1,42 @@
 {% extends '../CommonAdmin/ListAction/ListBuilderAction.php.twig' %}
 {% block setFilters -%}
+
+    public static function getAllColumns()
+    {
+        return [
+    {% for column in builder.columns %}
+            '{{ column.name }}' => '{{ column.label|addslashes }}',
+    {% endfor %}
+        ];
+    }
+
+    public static function getPreferedColumns()
+    {
+        return [
+    {% for column in builder.preferedColumns %}
+            '{{ column }}',
+    {% endfor %}
+        ];
+    }
+
+    protected function getCurrentColumns($removeID = false)
+    {
+        $columns = array_merge(
+            array_combine($this->getSelectedColumns(), $this->getSelectedColumns()),
+            self::getAllColumns()
+        );
+        if ($removeID) unset($columns['id']);
+        return $columns;
+    }
+
+    protected function getSelectedColumns()
+    {
+        return array_merge(
+            array('id'),
+            $this->getUser()->getParameter($this->getSessionPrefix().'List\Columns', self::getPreferedColumns())
+        );
+    }
+
     /**
      * Store in the session service the current filters
      *

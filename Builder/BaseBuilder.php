@@ -28,8 +28,8 @@ abstract class BaseBuilder extends GenericBaseBuilder
      * Set files to generate
      *
      * @param array $templatesToGenerate
-     *     key:   template file
-     *     value: output file name
+     *                                   key:   template file
+     *                                   value: output file name
      */
     public function setTemplatesToGenerate(array $templatesToGenerate)
     {
@@ -45,6 +45,16 @@ abstract class BaseBuilder extends GenericBaseBuilder
     public function addTemplateToGenerate($template, $outputName)
     {
         $this->templatesToGenerate[$template] = $outputName;
+    }
+
+    /**
+     * Retrieve default action after save name.
+     *
+     * @return string
+     */
+    public function getDefaultActionAfterSave()
+    {
+        return $this->getGenerator()->getDefaultActionAfterSave();
     }
 
     /**

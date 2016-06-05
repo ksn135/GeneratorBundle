@@ -19,6 +19,11 @@ class ListBuilder extends BaseBuilder
 
     protected $filter_columns = array();
 
+    public function getPreferedColumns()
+    {
+        return $this->getVariable('preferedColumns', []);
+    }
+
     /**
      * (non-PHPdoc)
      * @see Admingenerator\GeneratorBundle\Builder.BaseBuilder::getYamlKey()

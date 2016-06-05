@@ -18,18 +18,23 @@
     <form action="{{ echo_twig('filtersUrl') }}" method="post" {{ echo_twig("form_enctype(form)") }} role="form">
         <tr class="list_thead_filter active">
             {% if batch_actions|default is not empty %}
+    {{ echo_block("list_thead_filter_first_column") }}
                 <td></td>
+    {{ echo_endblock() }}
             {% endif %}
+
+    {{ echo_block("list_thead_filter_all_content") }}
+
         {% for column in builder.columns -%}
             {% if column.groups is not empty %}
             {{ echo_set('columnGroups', echo_twig_arr(column.groups), false) }}
             {{ echo_if('groups is empty or columnGroups|intersect(groups) is not empty') }}
             {% endif %}
 
-            {{ echo_block('list_thead_filter_' ~ column.name) -}}
+            {{ echo_block('list_thead_filter_' ~ column.name|replace({'.': '_'})) -}}
             <td class="list_thead_filter">
                 {% if column.isFilterable -%}
-                <div class="filter-container">
+                <div class="filter-container filter-{{ builder.ModelClass }}-{{ column.name|replace({'.': '_'}) }}">
                     {{ echo_twig("form_widget(form['" ~column.name ~ "'])") }}
                 </div>
                 {%- endif -%}
@@ -41,9 +46,12 @@
             {% endif %}
         {% endfor -%}
 
+    {{ echo_endblock() }}
+
+
         {%- if object_actions|default is not empty %}
         {{ echo_block("list_thead_filter_actions") }}
-            <td class="actions">
+            <td class="actions {% if builder.preferedColumns|length %}with-columns{% endif %}">
                  <div class="btn-group">
                     <button type="submit" class="btn btn-primary" title="{{ echo_trans('list.filter') }}">
                         <i class="fa fa-search"></i>
@@ -51,13 +59,20 @@
                     <button type="submit" class="btn btn-warning" title="{{ echo_trans('list.reset') }}" name="reset" value="true">
                         <i class="fa fa-refresh"></i>
                     </button>
+    {% if builder.preferedColumns|length %}
+                    <button type="button" class="btn btn-info" title="Колонки" data-toggle="modal" data-target="#s2a_modal_columns_dialog">
+                        <i class="fa fa-list-ol"></i>
+                    </button>
+    {% endif %}                 
                 </div>
-                {{ echo_twig("form_rest(form)") }}
+                {{ echo_twig("form_widget(form._token)") }}
             </td>
         {{ echo_endblock() }}
         {% endif -%}
         </tr>
-    </form>
+
+{{ echo_twig("form_end(form,{'render_rest': false})") }}
+
     {% if builder.filterColumnGroups is not empty %}
     {{ echo_endif() }}
     {% endif %}
@@ -67,17 +82,25 @@
 {% block list_thead_label %}
 <tr class="list_thead">
     {% if batch_actions|default is not empty %}
+
+        {{ echo_block("list_thead_label_first_column") }}
         <th class="list_thead_batch_action">
             <input id="batchActionSelectAll" type="checkbox" name="batchAll" />
         </th>
+        {{ echo_endblock() }}
+
     {% endif %}
+
+{{ echo_block("list_thead_label_all_content") }}
+
+
 {% for column in builder.columns -%}
     {% if column.groups is not empty %}
     {{ echo_set('columnGroups', echo_twig_arr(column.groups), false) }}
     {{ echo_if('groups is empty or columnGroups|intersect(groups) is not empty') }}
     {% endif %}
 
-    {{ echo_block('list_thead_column_' ~ column.name) -}}
+    {{ echo_block('list_thead_column_' ~ column.name|replace({'.': '_'}) ) -}}
     <th class="list_thead_column{{ echo_if (column.isSortable) }} sortable{{ echo_if ("sortColumn == '" ~ column.sortOn ~ "' and sortOrder == 'ASC'") }} sort_asc{{ echo_elseif ("sortColumn == '" ~ column.sortOn ~ "' and sortOrder == 'DESC'") }} sort_desc{{ echo_endif () }}{{ echo_endif () }}">
         <span class="sort-addon">
         {% if column.isSortable -%}
@@ -99,6 +122,9 @@
     {{ echo_endif() }}
     {% endif %}
 {% endfor -%}
+
+{{ echo_endblock() }}
+
 
 {%- if object_actions|default is not empty %}
 {{ echo_block("list_thead_actions") }}

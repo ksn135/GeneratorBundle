@@ -21,8 +21,8 @@ class RoutingLoader extends FileLoader
                     'requirements' => array(),
                 ),
         'excel'=> array(
-                    'pattern'      => '/excel',
-                    'defaults'     => array(),
+                    'pattern'      => '/excel/{key}',
+                    'defaults'     => array('key'=>null),
                     'requirements' => array(),
                     'controller'   => 'excel',
                 ),
@@ -74,6 +74,12 @@ class RoutingLoader extends FileLoader
                 ),
         'filters' => array(
                     'pattern'      => '/filter',
+                    'defaults'     => array(),
+                    'requirements' => array(),
+                    'controller'   => 'list',
+                ),
+        'columns' => array(
+                    'pattern'      => '/column',
                     'defaults'     => array(),
                     'requirements' => array(),
                     'controller'   => 'list',

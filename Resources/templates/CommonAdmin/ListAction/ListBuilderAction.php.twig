@@ -68,6 +68,10 @@ class ListController extends BaseController
         return $this->generateUrl("{{ builder.routePrefixWithSubfolder ~ '_' ~ bundle_name ~ (builder.BaseGeneratorName ? '_' ~ builder.BaseGeneratorName : '') ~ '_filters' }}");
     }
 
+    protected function getColumnsUrl()
+    {
+        return $this->generateUrl("{{ builder.routePrefixWithSubfolder ~ '_' ~ bundle_name ~ (builder.BaseGeneratorName ? '_' ~ builder.BaseGeneratorName : '') ~ '_columns' }}");
+    }
     /**
      * Get additional parameters for rendering.
      *

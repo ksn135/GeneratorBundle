@@ -3,7 +3,7 @@
 
 {% block list_row %}
 {{ echo_block('list_row') }}
-<tr class="list_trow">
+<tr class="list_trow {{ echo_block('list_row_class') }}{{ echo_endblock() }}">
     {{- block('list_row_content') -}}
 
     {{- block('object_actions') }}

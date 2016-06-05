@@ -51,8 +51,9 @@
             // Plugin-scope helper
             var that = this;
 
+            that.$submit = $(that.options.submitSelector);
             // Hide submit button
-            $(that.options.submitSelector).remove();
+            that.$submit.hide();
             
             // Select container
             var $batch    = $(that.options.selectedItems);
@@ -102,6 +103,8 @@
                 return false;
             }
             
+            $(this.$submit).show();
+
             $(this.$selector).closest('form').submit();
         }
     };

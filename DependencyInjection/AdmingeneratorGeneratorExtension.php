@@ -7,10 +7,8 @@ use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
-
 use Admingenerator\GeneratorBundle\Exception\ModelManagerNotSelectedException;
 
 class AdmingeneratorGeneratorExtension extends Extension implements PrependExtensionInterface
@@ -21,7 +19,7 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
     public function prepend(ContainerBuilder $container)
     {
         $config = array('twig' => array(
-            'template' => 'AdmingeneratorGeneratorBundle:KnpMenu:knp_menu_trans.html.twig'
+            'template' => 'AdmingeneratorGeneratorBundle:KnpMenu:knp_menu_trans.html.twig',
         ));
 
         foreach ($container->getExtensions() as $name => $extension) {
@@ -49,6 +47,7 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
         $container->setParameter('admingenerator.exit_path', $config['exit_path']);
         $container->setParameter('admingenerator.stylesheets', $config['stylesheets']);
         $container->setParameter('admingenerator.javascripts', $config['javascripts']);
+        $container->setParameter('admingenerator.default_action_after_save', $config['default_action_after_save']);
 
         $this->processModelManagerConfiguration($config, $container);
         $this->processTwigConfiguration($config['twig'], $container);
@@ -56,8 +55,8 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
     }
 
     /**
-     * @param array $config
-     * @param ContainerBuilder $container
+     * @param  array                            $config
+     * @param  ContainerBuilder                 $container
      * @throws ModelManagerNotSelectedException
      */
     private function processModelManagerConfiguration(array $config, ContainerBuilder $container)
@@ -67,17 +66,16 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
         }
 
         $loader = new XmlFileLoader($container, new FileLocator(dirname(__DIR__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config'));
-        $config['templates_dirs'][] = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Resources' . DIRECTORY_SEPARATOR . 'templates';
+        $config['templates_dirs'][] = dirname(__DIR__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'templates';
 
         $doctrineOrmTemplatesDirs = array();
-        $doctrineOdmTemplatesDirs = array() ;
+        $doctrineOdmTemplatesDirs = array();
         $propelTemplatesDirs = array();
         foreach ($config['templates_dirs'] as $dir) {
             $doctrineOrmTemplatesDirs[] = $dir.DIRECTORY_SEPARATOR.'Doctrine';
             $doctrineOdmTemplatesDirs[] = $dir.DIRECTORY_SEPARATOR.'DoctrineODM';
             $propelTemplatesDirs[]      = $dir.DIRECTORY_SEPARATOR.'Propel';
         }
-
 
         if ($config['use_doctrine_orm']) {
             $loader->load('doctrine_orm.xml');
@@ -86,7 +84,6 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
                 $container
                     ->getDefinition('admingenerator.generator.doctrine')
                     ->addMethodCall('forceOverwriteIfExists');
-
             }
 
             $formTypes = $config['form_types']['doctrine_orm'];
@@ -131,7 +128,7 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
      * for all $directories.
      *
      * @param Definition $generatorDefinition
-     * @param array $directories
+     * @param array      $directories
      */
     private function addTemplatesInitialization(Definition $generatorDefinition, array $directories)
     {
@@ -144,7 +141,7 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
     }
 
     /**
-     * @param array $twigConfiguration
+     * @param array            $twigConfiguration
      * @param ContainerBuilder $container
      */
     private function processTwigConfiguration(array $twigConfiguration, ContainerBuilder $container)
@@ -158,7 +155,7 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
     }
 
     /**
-     * @param array $config
+     * @param array            $config
      * @param ContainerBuilder $container
      */
     private function processCacheConfiguration(array $config, ContainerBuilder $container)
@@ -171,7 +168,7 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
             ->getDefinition('admingenerator.generator.listener')
             ->addMethodCall('setCacheProvider', array(
                 new Reference($config['generator_cache']),
-                $container->getParameter('kernel.environment')
+                $container->getParameter('kernel.environment'),
             ));
 
         if ($config['use_doctrine_orm']) {
@@ -188,7 +185,7 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
     }
 
     /**
-     * @param string $cacheProviderServiceName
+     * @param string     $cacheProviderServiceName
      * @param Definition $serviceDefinition
      */
     private function addCacheProviderToGenerator($cacheProviderServiceName, Definition $serviceDefinition, ContainerBuilder $container)
@@ -196,13 +193,13 @@ class AdmingeneratorGeneratorExtension extends Extension implements PrependExten
         $serviceDefinition
             ->addMethodCall('setCacheProvider', array(
                 new Reference($cacheProviderServiceName),
-                $container->getParameter('kernel.environment')
+                $container->getParameter('kernel.environment'),
             ));
     }
 
     /**
-     * @param array $config
-     * @param ContainerBuilder $container
+     * @param  array            $config
+     * @param  ContainerBuilder $container
      * @return Configuration
      */
     public function getConfiguration(array $config, ContainerBuilder $container)

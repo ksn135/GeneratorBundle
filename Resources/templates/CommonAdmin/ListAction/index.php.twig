@@ -23,6 +23,56 @@ use {{ builder.namespacePrefixWithSubfolder }}\{{ bundle_name }}\Form\Type\{{ bu
             'scopes'                    => $this->getScopes(),
             'groups'                    => $this->getGroups(),
             'perPageChoices'            => $this->getPerPageChoices(),
+            'columnsUrl'                => $this->getColumnsUrl(),
+            'columns'                   => $this->createColumnsForm()->createView(),
+            'selected_columns'          => $this->getSelectedColumns(),            
         ));
     }
+
+
+    protected function createColumnsForm()
+    {
+        return $this->createFormBuilder(
+            ['columns' => $this->getSelectedColumns()])
+            ->add('columns', 's2a_select2_choice', [
+                    'label' => 'Столбцы (можно передвигать их вверх/вниз с зажатой левой клавишей мыши)',
+                    'multiple' => true,
+                    'expanded' => true,
+                    'choices' => $this->getCurrentColumns(true),
+                ])
+            ->getForm();         
+    }
+
+    public function columnsAction()
+    {
+        if ($this->get('request')->get('reset')) {
+
+            $this->getUser()->removeParameterByTitle(
+                $this->getSessionPrefix().'List\Columns',
+                $this->getDoctrine()->getManager()
+            );
+
+            return new RedirectResponse($this->getListUrl());
+        }
+
+        $columns = $this->createColumnsForm();
+
+        if ($this->getRequest()->getMethod() == "POST") {
+            $columns->bind($this->get('request'));
+
+            if ($columns->isValid()) {
+                $data = $this->getRequest()->get('form',['columns' => []]);
+                $parameter = $this->getUser()->setOrAddParameter(
+                    $this->getSessionPrefix().'List\Columns',
+                    array_values($data['columns'])
+                );
+                $em = $this->getDoctrine()->getManager();
+                $em->persist($parameter);
+                $em->flush();
+            }
+        }
+            
+        return new RedirectResponse($this->getListUrl());
+    }
+
 {% endblock %}

@@ -12,12 +12,18 @@
     {{ echo_set('columnGroups', echo_twig_arr(column.groups), false) }}
     {{ echo_if('groups is empty or columnGroups|intersect(groups) is not empty') }}
     {% endif %}
-          <td class="td_{{ column.dbType }} td_{{ column.name }}">
-              {{- block('column_default') -}}
-          </td>
+
+{{ echo_block("list_row_column_" ~ column.name|replace({'.': '_'}) ) }}    
+      <td class="td_{{ column.dbType }} td_{{ column.name|replace({'.': '_'}) }}">
+          {{- block('column_default') -}}
+      </td>
+{{ echo_endblock() }}
+
     {% if column.groups|default is not empty %}
     {{ echo_endif() }}
     {% endif %}
     {% endfor %}
 {{ echo_endblock() }}
 {% endblock %}
+
+

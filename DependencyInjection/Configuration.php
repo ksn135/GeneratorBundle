@@ -16,7 +16,7 @@ class Configuration implements ConfigurationInterface
      * @var string
      */
     protected $rootName;
-    
+
     /**
      * @param string $rootName
      */
@@ -24,7 +24,7 @@ class Configuration implements ConfigurationInterface
     {
         $this->rootName = $rootName;
     }
-    
+
     /**
      * Generates the configuration tree builder.
      *
@@ -52,6 +52,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('logout_path')->defaultNull()->end()
                 ->scalarNode('exit_path')->defaultNull()->end()
                 ->scalarNode('generator_cache')->defaultNull()->end()
+                ->scalarNode('default_action_after_save')->defaultValue('edit')->end()
                 ->arrayNode('twig')
                     ->addDefaultsIfNotSet()
                     ->children()

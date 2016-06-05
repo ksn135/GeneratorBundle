@@ -7,7 +7,7 @@
 {% use '../CommonAdmin/ListTemplate/Column/undefined.php.twig' %}
 
 {% block column_default %}
-{{ echo_block('list_td_column_' ~ column.name) -}}
+{{ echo_block('list_td_column_' ~ column.name|replace({'.': '_'}) ) -}}
     {{ echo_if(builder.ModelClass ~ '.' ~ column.getter ~ ' is defined') }}
     {%- if column.customView != null and builder.variable('custom_blocks') != null -%}
         {{- echo_use(builder.variable('custom_blocks')) -}}

@@ -1,5 +1,51 @@
 {% block list_scopes %}
 {{ echo_block("list_scopes") }}
+
+{% if builder.preferedColumns|length %}
+
+<div class="modal fade" id="s2a_modal_columns_dialog" tabindex="-1" role="dialog" aria-labelledby="s2a_modal_columns_label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+<form action="{{ echo_twig('columnsUrl') }}" method="post" role="form" novalidate="novalidate">
+        
+
+                <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ echo_trans('list.button.close') }}</span></button>
+                    <h3 class="modal-title" id="s2a_modal_columns_label">Выбор столбцов для отображения</h3>
+                </div>
+
+                    <div class="modal-body">
+                        {{ echo_twig("form_widget(columns)") }}
+                    </div>
+                    <div class="modal-footer">
+                        <div class="btn-toolbar">
+                            <div class="pull-right">
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-check"></i> Сохранить</button>
+                                <button type="submit" class="btn btn-sm btn-default" name="reset" value="true"><i class="fa fa-refresh"></i> По умолчанию</button>
+                            </div>
+                        </div>
+                    </div>
+
+</form> 
+
+        </div>
+    </div>
+</div>
+
+
+  <script>
+  $(function() {
+    $( "#form_columns" ).sortable();
+    $( "#form_columns" ).disableSelection();
+    $( "#form_columns" ).addClass('list-group');
+    $( "#form_columns div.checkbox.ui-sortable-handle").addClass('list-group-item');
+  });
+  </script>
+    
+{% endif %}
+
+
 {% if scopes|default is not empty %}
 <div class="row-fluid">
     <div class="list_scopes btn-toolbar" role="toolbar">
